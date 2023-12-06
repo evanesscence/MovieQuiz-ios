@@ -91,9 +91,17 @@ final class MovieQuizViewController: UIViewController {
     
     // MARK: - IB Actions
     @IBAction private func yesButton(_ sender: Any) {
+        let answer = true
+        let correctAnswer = questions[currentQuestionIndex].correctAnswer
+        
+        showAnswerResult(isCorrect: answer == correctAnswer)
     }
     
     @IBAction private func noButton(_ sender: Any) {
+        let answer = false
+        let correctAnswer = questions[currentQuestionIndex].correctAnswer
+        
+        showAnswerResult(isCorrect: answer == correctAnswer)
     }
     
     
@@ -110,6 +118,30 @@ final class MovieQuizViewController: UIViewController {
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
+    }
+    
+    private func showAnswerResult(isCorrect: Bool) {
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 8
+        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.showNextQuestionOrResults()
+            self.imageView.layer.borderColor = UIColor.ypBlack.cgColor
+        }
+    }
+    
+    private func showNextQuestionOrResults() {
+        if currentQuestionIndex == questions.count - 1 {
+            
+        } else {
+            currentQuestionIndex += 1
+            
+            let nextQuestion = questions[currentQuestionIndex]
+            let viewModel = convert(model: nextQuestion)
+            
+            show(quiz: viewModel)
+        }
     }
 }
 
