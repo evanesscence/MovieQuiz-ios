@@ -1,28 +1,29 @@
 import UIKit
 
 final class MovieQuizViewController: UIViewController {
-    
-    
     // MARK: - IB Outlets
     @IBOutlet private var imageView: UIImageView!
+    
     @IBOutlet private var textLabel: UILabel!
     @IBOutlet private var counterLabel: UILabel!
     
+    @IBOutlet private var noButton: UIButton!
+    @IBOutlet private var yesButton: UIButton!
     
     // MARK: - Structures
-    struct QuizStepViewModel {
+    private struct QuizStepViewModel {
         let image: UIImage
         let question: String
         let questionNumber: String
     }
     
-    struct QuizResultsView {
+    private struct QuizResultsView {
         let title: String
         let text: String
         let buttonText: String
     }
     
-    struct QuizQuestion {
+    private struct QuizQuestion {
         let image: String
         let text: String
         let correctAnswer: Bool
@@ -31,7 +32,6 @@ final class MovieQuizViewController: UIViewController {
     // MARK: - Private Properties
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
-    
     
     // MARK: - Private Properties
     private let questions: [QuizQuestion] = [
@@ -77,7 +77,6 @@ final class MovieQuizViewController: UIViewController {
             correctAnswer: false)
     ]
     
-    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -88,9 +87,10 @@ final class MovieQuizViewController: UIViewController {
         show(quiz: convertedQuestion)
     }
     
-    
     // MARK: - IB Actions
     @IBAction private func yesButton(_ sender: Any) {
+        yesButton.isEnabled = false
+        
         let answer = true
         let correctAnswer = questions[currentQuestionIndex].correctAnswer
         
@@ -98,12 +98,13 @@ final class MovieQuizViewController: UIViewController {
     }
     
     @IBAction private func noButton(_ sender: Any) {
+        noButton.isEnabled = false
+        
         let answer = false
         let correctAnswer = questions[currentQuestionIndex].correctAnswer
         
         showAnswerResult(isCorrect: answer == correctAnswer)
     }
-    
     
     // MARK: - Private Methods
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
@@ -152,6 +153,10 @@ final class MovieQuizViewController: UIViewController {
             let viewModel = convert(model: nextQuestion)
             
             show(quiz: viewModel)
+            
+            noButton.isEnabled = true
+            yesButton.isEnabled = true
+            
         }
     }
     
