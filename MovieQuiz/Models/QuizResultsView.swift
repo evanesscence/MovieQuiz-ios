@@ -1,8 +1,7 @@
-//
-//  QuizResultsView.swift
-//  MovieQuiz
-//
-//  Created by Karina ❦ on 13.12.2023.
-//
-
 import Foundation
+
+struct QuizResultsView {
+    let title: String
+    let text: String
+    let buttonText: String
+}
