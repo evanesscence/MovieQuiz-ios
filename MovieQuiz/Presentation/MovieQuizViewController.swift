@@ -80,8 +80,11 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func showNextQuestionOrResults() {
-        if currentQuestionIndex == questionsAmount {
-            let text = "Ваш результат: \(correctAnswers)/\(questionsAmount)"
+        if currentQuestionIndex == questionsAmount - 1 {
+            let text = correctAnswers == questionsAmount ?
+                "Поздравляем, вы ответили на 10 из 10!" :
+                "Вы ответили на \(correctAnswers) из 10, попробуйте ещё раз!"
+            
             let viewModel = QuizResultsView(
                 title: "Этот раунд окончен!",
                 text: text,
@@ -92,14 +95,15 @@ final class MovieQuizViewController: UIViewController {
         } else {
             currentQuestionIndex += 1
             
-//            let nextQuestion = questions[currentQuestionIndex]
-//            let viewModel = convert(model: nextQuestion)
-//            
-//            show(quiz: viewModel)
-            
-            noButton.isEnabled = true
-            yesButton.isEnabled = true
-            
+            if let nextQuestion = questionFactory.requestNextQuestion() {
+                currentQuestion = nextQuestion
+                let viewModel = convert(model: nextQuestion)
+                
+                show(quiz: viewModel)
+                
+                noButton.isEnabled = true
+                yesButton.isEnabled = true
+            }
         }
     }
     
@@ -128,7 +132,7 @@ final class MovieQuizViewController: UIViewController {
         self.present(alert, animated: true, completion: nil)
     }
 }
-
+ 
 /*
  Mock-данные
  
