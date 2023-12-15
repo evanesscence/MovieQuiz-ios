@@ -104,7 +104,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
                     self.questionFactory?.requestNextQuestion()
                 })
             
-            var resultAlert = AlertPresenter()
+            let resultAlert = AlertPresenter()
             resultAlert.delegate = self
             resultAlert.show(quiz: viewModel)
             
