@@ -10,7 +10,6 @@ class AlertPresenter {
             message: result.message,
             preferredStyle: .alert)
         let action = UIAlertAction(title: result.buttonText, style: .default, handler: result.completion)
-            
         
         alert.addAction(action)
         

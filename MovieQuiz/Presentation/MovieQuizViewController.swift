@@ -14,15 +14,17 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
     
-    // MARK: - Private Properties
     private let questionsAmount: Int = 10
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
+    private var statistic: StatisticServiceImplementation = StatisticServiceImplementation()
     
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        print(NSHomeDirectory())
+        
         questionFactory = QuestionFactory(delegate: self)
         questionFactory?.requestNextQuestion()
     }
@@ -89,13 +91,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 {
-            let text = correctAnswers == questionsAmount ?
-            "Поздравляем, вы ответили на 10 из 10!" :
-            "Вы ответили на \(correctAnswers) из 10, попробуйте ещё раз!"
+            statistic.store(correct: correctAnswers, total: questionsAmount)
             
             let viewModel = AlertModel(
                 title: "Этот раунд окончен!",
-                message: text,
+                message: "Ваш результат: \(correctAnswers)/\(questionsAmount) \n Количество сыгранных квизов: \(statistic.gamesCount) \n Рекорд: \(statistic.bestGame.correct)/\(statistic.bestGame.total) (\(statistic.bestGame.date.dateTimeString)) \n Средняя точность: \(String(format: "%.2f", statistic.totalAccuracy))%",
                 buttonText: "Сыграть ещё раз",
                 completion: { [weak self] _ in
                     guard let self = self else { return }
@@ -118,7 +118,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
     }
 }
- 
+
 /*
  Mock-данные
  

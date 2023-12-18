@@ -1,8 +1,13 @@
-//
-//  GameRecord.swift
-//  MovieQuiz
-//
-//  Created by Karina ❦ on 18.12.2023.
-//
-
 import Foundation
+
+struct GameRecord: Codable {
+    let correct: Int
+    let total: Int
+    let date: Date
+    
+    func bestRecord(_ record: GameRecord) -> Bool {
+        correct > record.correct
+    }
+    
+}
+
