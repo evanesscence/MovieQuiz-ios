@@ -43,7 +43,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // MARK: - IB Actions
     @IBAction private func yesButton(_ sender: Any) {
-        yesButton.isEnabled = false
+        noButton.isEnabled = true
+        yesButton.isEnabled = true
         let answer = true
         
         guard let currentQuestion = currentQuestion else { return }
@@ -51,7 +52,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     @IBAction private func noButton(_ sender: Any) {
-        noButton.isEnabled = false
+        noButton.isEnabled = true
+        yesButton.isEnabled = true
         let answer = false
         
         guard let currentQuestion = currentQuestion else { return }
