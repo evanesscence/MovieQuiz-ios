@@ -4,12 +4,12 @@ import UIKit
 class AlertPresenter {
     weak var delegate: MovieQuizViewController?
     
-    func show(quiz result: AlertModel) {
+    func show(model: AlertModel) {
         let alert = UIAlertController(
-            title: result.title,
-            message: result.message,
+            title: model.title,
+            message: model.message,
             preferredStyle: .alert)
-        let action = UIAlertAction(title: result.buttonText, style: .default, handler: result.completion)
+        let action = UIAlertAction(title: model.buttonText, style: .default, handler: model.completion)
         
         alert.addAction(action)
         
