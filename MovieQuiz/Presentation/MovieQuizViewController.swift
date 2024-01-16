@@ -4,7 +4,7 @@ final class MovieQuizViewController: UIViewController {
     // MARK: - IB Outlets
     
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
-    
+
     @IBOutlet private var imageView: UIImageView!
     
     @IBOutlet private var textLabel: UILabel!
@@ -46,12 +46,6 @@ final class MovieQuizViewController: UIViewController {
         counterLabel.text = step.questionNumber
     }
     
-    func highlightImageBorder(isCorrect: Bool) {
-        imageView.layer.masksToBounds = true
-        imageView.layer.borderWidth = 8
-        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-    }
-    
     func show(quiz result: QuizResultsView) {
         let message = presenter.makeResultsMessage()
         
@@ -65,6 +59,12 @@ final class MovieQuizViewController: UIViewController {
         }
         
         alertPresenter.show(in: self, model: alertModel)
+    }
+    
+    func highlightImageBorder(isCorrect: Bool) {
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 8
+        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
     }
     
     func yesAndNoButtons(areEnabled: Bool) {

@@ -2,15 +2,15 @@ import Foundation
 import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
-    var correctAnswers = 0
-    let questionsAmount: Int = 10
+    private let statistic: StatisticService!
+    private var questionFactory: QuestionFactoryProtocol?
+    private weak var viewController: MovieQuizViewController?
+    
+    private var currentQuestion: QuizQuestion?
+    private let questionsAmount: Int = 10
     private var currentQuestionIndex: Int = 0
-    
-    private var statistic: StatisticService!
-    var currentQuestion: QuizQuestion?
-    var questionFactory: QuestionFactoryProtocol?
-    weak var viewController: MovieQuizViewController?
-    
+    private var correctAnswers: Int = 0
+
     init(viewController: MovieQuizViewController) {
         self.viewController = viewController
         
@@ -44,16 +44,6 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
     
     // MARK: - Internal Methods
-    
-    func proceedWithAnswer(isCorrect: Bool) {
-        didAnswer(isCorrect: isCorrect)
-        viewController?.highlightImageBorder(isCorrect: isCorrect)
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
-            self.proceedToNextQuestionOrResults()
-        }
-    }
     
     func makeResultsMessage() -> String {
         statistic.store(correct: correctAnswers, total: questionsAmount)
@@ -104,7 +94,34 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         didAnswer(isYes: false)
     }
     
-    func proceedToNextQuestionOrResults() {
+    func didAnswer(isCorrect: Bool) {
+        if isCorrect {
+            correctAnswers += 1
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func proceedWithAnswer(isCorrect: Bool) {
+        didAnswer(isCorrect: isCorrect)
+        viewController?.highlightImageBorder(isCorrect: isCorrect)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else { return }
+            self.proceedToNextQuestionOrResults()
+        }
+    }
+    
+    private func didAnswer(isYes: Bool) {
+        guard let currentQuestion = currentQuestion else { return }
+        
+        let answer = isYes
+        
+        viewController?.yesAndNoButtons(areEnabled: false)
+        proceedWithAnswer(isCorrect: answer == currentQuestion.correctAnswer)
+    }
+    
+    private func proceedToNextQuestionOrResults() {
         viewController?.yesAndNoButtons(areEnabled: true)
         
         if isLastQuestion() {
@@ -121,22 +138,5 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             self.switchToNextQuestion()
             questionFactory?.requestNextQuestion()
         }
-    }
-    
-    func didAnswer(isCorrect: Bool) {
-        if isCorrect {
-            correctAnswers += 1
-        }
-    }
-    
-    // MARK: - Private Methods
-    
-    private func didAnswer(isYes: Bool) {
-        guard let currentQuestion = currentQuestion else { return }
-        
-        let answer = isYes
-        
-        viewController?.yesAndNoButtons(areEnabled: false)
-        proceedWithAnswer(isCorrect: answer == currentQuestion.correctAnswer)
     }
 }
