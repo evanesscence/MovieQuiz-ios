@@ -19,7 +19,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private let questionsAmount: Int = 10
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
-    private var statistic: StatisticServiceImplementation = StatisticServiceImplementation()
+    private var statistic: StatisticServiceImplementation?
     private var alertPresenter = AlertPresenter()
     
     
@@ -28,6 +28,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         super.viewDidLoad()
         
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        statistic = StatisticServiceImplementation()
         
         showLoadingIndicator()
         questionFactory?.loadData()
@@ -104,24 +105,48 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
     }
     
-    private func showNextQuestionOrResults() {
-        if currentQuestionIndex == questionsAmount - 1 {
+    private func show(quiz result: QuizResultsView) {
+        var message = result.text
+        if let statistic = statistic {
             statistic.store(correct: correctAnswers, total: questionsAmount)
             
-            let alertModel = AlertModel(
-                title: "Этот раунд окончен!",
-                message: "Ваш результат: \(correctAnswers)/\(questionsAmount) \n Количество сыгранных квизов: \(statistic.gamesCount) \n Рекорд: \(statistic.bestGame.correct)/\(statistic.bestGame.total) (\(statistic.bestGame.date.dateTimeString)) \n Средняя точность: \(String(format: "%.2f", statistic.totalAccuracy))%",
-                buttonText: "Сыграть ещё раз",
-                completion: { [weak self] in
-                    guard let self = self else { return }
+            let bestGame = statistic.bestGame
+            
+            let totalPlaysCountLine = "Количество сыгранных квизов: \(statistic.gamesCount)"
+            let currentGameResultLine = "Ваш результат: \(correctAnswers)\\\(questionsAmount)"
+            let bestGameInfoLine = "Рекорд: \(bestGame.correct)/\(bestGame.total)"
+            + " (\(bestGame.date.dateTimeString))"
+            let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f", statistic.totalAccuracy))%"
+            
+            let resultMessage = [
+                currentGameResultLine, totalPlaysCountLine, bestGameInfoLine, averageAccuracyLine
+            ].joined(separator: "\n")
+            
+            message = resultMessage
+        }
+            
+            let alertModel = AlertModel(title: result.title, message: message, buttonText: result.buttonText) { [weak self] in
+                guard let self = self else { return }
                     
                     self.correctAnswers = 0
                     self.currentQuestionIndex = 0
                     
                     self.questionFactory?.requestNextQuestion()
-                })
-            
+                }
+        
             alertPresenter.show(in: self, model: alertModel)
+    }
+    
+    private func showNextQuestionOrResults() {
+        if currentQuestionIndex == questionsAmount - 1 {
+            let text = "Вы ответили на \(correctAnswers) из 10, попробуйте еще раз!"
+
+            let viewModel = QuizResultsView(
+                title: "Этот раунд окончен!",
+                text: text,
+                buttonText: "Сыграть ещё раз")
+            
+            show(quiz: viewModel)
             
             noButton.isEnabled = true
             yesButton.isEnabled = true
