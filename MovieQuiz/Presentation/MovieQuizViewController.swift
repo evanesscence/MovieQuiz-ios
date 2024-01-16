@@ -2,6 +2,7 @@ import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - IB Outlets
+    
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
     @IBOutlet private var imageView: UIImageView!
@@ -13,17 +14,21 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private var yesButton: UIButton!
     
     // MARK: - Private Properties
-    private var currentQuestionIndex = 0
+    
     private var correctAnswers = 0
     
+    private var currentQuestionIndex = 0
     private let questionsAmount: Int = 10
+    
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
-    private var statistic: StatisticServiceImplementation?
+    private var statistic: StatisticService?
+    
     private var alertPresenter = AlertPresenter()
     
     
     // MARK: - Lifecycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -32,10 +37,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         showLoadingIndicator()
         questionFactory?.loadData()
-        
     }
     
     // MARK: - QuestionFactoryDelegate
+    
     func didLoadDataFromServer() {
         activityIndicator.isHidden = true
         questionFactory?.requestNextQuestion()
@@ -56,9 +61,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     // MARK: - IB Actions
+    
     @IBAction private func yesButton(_ sender: Any) {
-        noButton.isEnabled = false
-        yesButton.isEnabled = false
+        yesAndNoButtons(enabled: false)
+        
         let answer = true
         
         guard let currentQuestion = currentQuestion else { return }
@@ -66,8 +72,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     @IBAction private func noButton(_ sender: Any) {
-        noButton.isEnabled = false
-        yesButton.isEnabled = false
+        yesAndNoButtons(enabled: false)
+        
         let answer = false
         
         guard let currentQuestion = currentQuestion else { return }
@@ -75,6 +81,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     // MARK: - Private Methods
+    
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         let questionStep = QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(),
@@ -124,20 +131,22 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             
             message = resultMessage
         }
-            
-            let alertModel = AlertModel(title: result.title, message: message, buttonText: result.buttonText) { [weak self] in
-                guard let self = self else { return }
-                    
-                    self.correctAnswers = 0
-                    self.currentQuestionIndex = 0
-                    
-                    self.questionFactory?.requestNextQuestion()
-                }
         
-            alertPresenter.show(in: self, model: alertModel)
+        let alertModel = AlertModel(title: result.title, message: message, buttonText: result.buttonText) { [weak self] in
+            guard let self = self else { return }
+            
+            self.correctAnswers = 0
+            self.currentQuestionIndex = 0
+            
+            self.questionFactory?.requestNextQuestion()
+        }
+        
+        alertPresenter.show(in: self, model: alertModel)
     }
     
     private func showNextQuestionOrResults() {
+        yesAndNoButtons(enabled: true)
+        
         if currentQuestionIndex == questionsAmount - 1 {
             let text = "Вы ответили на \(correctAnswers) из 10, попробуйте еще раз!"
 
@@ -148,16 +157,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             
             show(quiz: viewModel)
             
-            noButton.isEnabled = true
-            yesButton.isEnabled = true
-            
         } else {
             currentQuestionIndex += 1
             questionFactory?.requestNextQuestion()
-            
-            noButton.isEnabled = true
-            yesButton.isEnabled = true
         }
+    }
+    
+    private func yesAndNoButtons(enabled: Bool) {
+        yesButton.isEnabled = enabled
+        noButton.isEnabled = enabled
     }
     
     private func showLoadingIndicator() {
