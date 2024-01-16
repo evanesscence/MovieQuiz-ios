@@ -122,6 +122,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
     
     private func proceedToNextQuestionOrResults() {
+        viewController?.showLoadingIndicator()
         viewController?.yesAndNoButtons(areEnabled: true)
         
         if isLastQuestion() {
