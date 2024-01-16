@@ -45,6 +45,16 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     
     // MARK: - Internal Methods
     
+    func proceedWithAnswer(isCorrect: Bool) {
+        didAnswer(isCorrect: isCorrect)
+        viewController?.highlightImageBorder(isCorrect: isCorrect)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else { return }
+            self.proceedToNextQuestionOrResults()
+        }
+    }
+    
     func makeResultsMessage() -> String {
         statistic.store(correct: correctAnswers, total: questionsAmount)
         
@@ -94,7 +104,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         didAnswer(isYes: false)
     }
     
-    func showNextQuestionOrResults() {
+    func proceedToNextQuestionOrResults() {
         viewController?.yesAndNoButtons(areEnabled: true)
         
         if isLastQuestion() {
@@ -127,6 +137,6 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         let answer = isYes
         
         viewController?.yesAndNoButtons(areEnabled: false)
-        viewController?.showAnswerResult(isCorrect: answer == currentQuestion.correctAnswer)
+        proceedWithAnswer(isCorrect: answer == currentQuestion.correctAnswer)
     }
 }

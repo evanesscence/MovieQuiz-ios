@@ -14,9 +14,7 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private var yesButton: UIButton!
     
     // MARK: - Private Properties
-    
-    
-    
+
     private var alertPresenter = AlertPresenter()
     private var presenter: MovieQuizPresenter!
     
@@ -42,23 +40,16 @@ final class MovieQuizViewController: UIViewController {
     // MARK: - Internal Methods
     
     func show(quiz step: QuizStepViewModel) {
+        imageView.layer.borderColor = UIColor.clear.cgColor
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
     }
     
-    func showAnswerResult(isCorrect: Bool) {
-        presenter.didAnswer(isCorrect: isCorrect)
-        
+    func highlightImageBorder(isCorrect: Bool) {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
         imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
-            self.presenter.showNextQuestionOrResults()
-            self.imageView.layer.borderColor = UIColor.ypBlack.cgColor
-        }
     }
     
     func show(quiz result: QuizResultsView) {
@@ -75,7 +66,6 @@ final class MovieQuizViewController: UIViewController {
         
         alertPresenter.show(in: self, model: alertModel)
     }
-    
     
     func yesAndNoButtons(areEnabled: Bool) {
         yesButton.isEnabled = areEnabled
