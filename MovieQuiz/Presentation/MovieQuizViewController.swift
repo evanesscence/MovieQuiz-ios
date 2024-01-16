@@ -15,10 +15,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // MARK: - Private Properties
     
-    private var correctAnswers = 0
-    
     private var questionFactory: QuestionFactoryProtocol?
-    private var currentQuestion: QuizQuestion?
     private var statistic: StatisticService?
     
     private var alertPresenter = AlertPresenter()
@@ -29,6 +26,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        presenter.viewController = self
         
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         statistic = StatisticServiceImplementation()
@@ -49,47 +48,29 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else { return }
-        
-        currentQuestion = question
-        let viewModel = presenter.convert(model: question)
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: viewModel)
-        }
+        presenter.didReceiveNextQuestion(question: question)
     }
     
     // MARK: - IB Actions
     
     @IBAction private func yesButton(_ sender: Any) {
-        yesAndNoButtons(enabled: false)
-        
-        let answer = true
-        
-        guard let currentQuestion = currentQuestion else { return }
-        showAnswerResult(isCorrect: answer == currentQuestion.correctAnswer)
+        presenter.yesButton()
     }
     
     @IBAction private func noButton(_ sender: Any) {
-        yesAndNoButtons(enabled: false)
-        
-        let answer = false
-        
-        guard let currentQuestion = currentQuestion else { return }
-        showAnswerResult(isCorrect: answer == currentQuestion.correctAnswer)
+        presenter.noButton()
     }
     
-    // MARK: - Private Methods
+    // MARK: - Internal Methods
     
-    private func show(quiz step: QuizStepViewModel) {
+    func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
     }
     
-    private func showAnswerResult(isCorrect: Bool) {
-        if isCorrect {
-            correctAnswers += 1
-        }
+    func showAnswerResult(isCorrect: Bool) {
+        presenter.didAnswer(isCorrect: isCorrect)
         
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
@@ -97,20 +78,21 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
-            self.showNextQuestionOrResults()
+            self.presenter.questionFactory = self.questionFactory
+            self.presenter.showNextQuestionOrResults()
             self.imageView.layer.borderColor = UIColor.ypBlack.cgColor
         }
     }
     
-    private func show(quiz result: QuizResultsView) {
+    func show(quiz result: QuizResultsView) {
         var message = result.text
         if let statistic = statistic {
-            statistic.store(correct: correctAnswers, total: presenter.questionsAmount)
+            statistic.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
             
             let bestGame = statistic.bestGame
             
             let totalPlaysCountLine = "Количество сыгранных квизов: \(statistic.gamesCount)"
-            let currentGameResultLine = "Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)"
+            let currentGameResultLine = "Ваш результат: \(presenter.correctAnswers)/\(presenter.questionsAmount)"
             let bestGameInfoLine = "Рекорд: \(bestGame.correct)/\(bestGame.total)"
             + " (\(bestGame.date.dateTimeString))"
             let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f", statistic.totalAccuracy))%"
@@ -125,38 +107,20 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         let alertModel = AlertModel(title: result.title, message: message, buttonText: result.buttonText) { [weak self] in
             guard let self = self else { return }
             
-            self.correctAnswers = 0
-            self.presenter.resetQuestionIndex()
-            
+            self.presenter.restartGame()
             self.questionFactory?.requestNextQuestion()
         }
         
         alertPresenter.show(in: self, model: alertModel)
     }
     
-    private func showNextQuestionOrResults() {
-        yesAndNoButtons(enabled: true)
-        
-        if presenter.isLastQuestion() {
-            let text = "Вы ответили на \(correctAnswers) из 10, попробуйте еще раз!"
-
-            let viewModel = QuizResultsView(
-                title: "Этот раунд окончен!",
-                text: text,
-                buttonText: "Сыграть ещё раз")
-            
-            show(quiz: viewModel)
-            
-        } else {
-            presenter.switchToNextQuestion()
-            questionFactory?.requestNextQuestion()
-        }
-    }
     
-    private func yesAndNoButtons(enabled: Bool) {
-        yesButton.isEnabled = enabled
-        noButton.isEnabled = enabled
+    func yesAndNoButtons(areEnabled: Bool) {
+        yesButton.isEnabled = areEnabled
+        noButton.isEnabled = areEnabled
     }
+
+    // MARK: - Private Methods
     
     private func showLoadingIndicator() {
         activityIndicator.isHidden = false
@@ -176,9 +140,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             buttonText: "Попробовать ещё раз") { [weak self] in
             guard let self = self else { return }
             
-            self.presenter.resetQuestionIndex()
-            self.correctAnswers = 0
-            
+            self.presenter.restartGame()
             self.questionFactory?.requestNextQuestion()
         }
         
