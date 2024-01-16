@@ -15,7 +15,7 @@ final class MovieQuizViewController: UIViewController {
     
     // MARK: - Private Properties
     
-    private var statistic: StatisticService?
+    
     
     private var alertPresenter = AlertPresenter()
     private var presenter: MovieQuizPresenter!
@@ -27,7 +27,6 @@ final class MovieQuizViewController: UIViewController {
         super.viewDidLoad()
         
         presenter = MovieQuizPresenter(viewController: self)
-        statistic = StatisticServiceImplementation()
     }
     
     // MARK: - IB Actions
@@ -63,26 +62,12 @@ final class MovieQuizViewController: UIViewController {
     }
     
     func show(quiz result: QuizResultsView) {
-        var message = result.text
-        if let statistic = statistic {
-            statistic.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
-            
-            let bestGame = statistic.bestGame
-            
-            let totalPlaysCountLine = "Количество сыгранных квизов: \(statistic.gamesCount)"
-            let currentGameResultLine = "Ваш результат: \(presenter.correctAnswers)/\(presenter.questionsAmount)"
-            let bestGameInfoLine = "Рекорд: \(bestGame.correct)/\(bestGame.total)"
-            + " (\(bestGame.date.dateTimeString))"
-            let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f", statistic.totalAccuracy))%"
-            
-            let resultMessage = [
-                currentGameResultLine, totalPlaysCountLine, bestGameInfoLine, averageAccuracyLine
-            ].joined(separator: "\n")
-            
-            message = resultMessage
-        }
+        let message = presenter.makeResultsMessage()
         
-        let alertModel = AlertModel(title: result.title, message: message, buttonText: result.buttonText) { [weak self] in
+        let alertModel = AlertModel(
+            title: result.title,
+            message: message,
+            buttonText: result.buttonText) { [weak self] in
             guard let self = self else { return }
             
             self.presenter.restartGame()

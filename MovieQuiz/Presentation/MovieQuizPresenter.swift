@@ -6,17 +6,20 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     let questionsAmount: Int = 10
     private var currentQuestionIndex: Int = 0
     
+    private var statistic: StatisticService!
     var currentQuestion: QuizQuestion?
     var questionFactory: QuestionFactoryProtocol?
     weak var viewController: MovieQuizViewController?
     
     init(viewController: MovieQuizViewController) {
-            self.viewController = viewController
-            
-            questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-            questionFactory?.loadData()
-            viewController.showLoadingIndicator()
-        }
+        self.viewController = viewController
+        
+        statistic = StatisticServiceImplementation()
+        
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        questionFactory?.loadData()
+        viewController.showLoadingIndicator()
+    }
     
     // MARK: - QuestionFactoryDelegate
     
@@ -41,6 +44,25 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
     
     // MARK: - Internal Methods
+    
+    func makeResultsMessage() -> String {
+        statistic.store(correct: correctAnswers, total: questionsAmount)
+        
+        let bestGame = statistic.bestGame
+        
+        let totalPlaysCountLine = "Количество сыгранных квизов: \(statistic.gamesCount)"
+        let currentGameResultLine = "Ваш результат: \(correctAnswers)/\(questionsAmount)"
+        let bestGameInfoLine = "Рекорд: \(bestGame.correct)/\(bestGame.total)"
+        + " (\(bestGame.date.dateTimeString))"
+        let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f", statistic.totalAccuracy))%"
+        
+        let resultMessage = [
+            currentGameResultLine, totalPlaysCountLine, bestGameInfoLine, averageAccuracyLine
+        ].joined(separator: "\n")
+        
+        return resultMessage
+        
+    }
     
     func isLastQuestion() -> Bool {
         currentQuestionIndex == questionsAmount - 1
