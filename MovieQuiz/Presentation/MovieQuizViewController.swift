@@ -15,7 +15,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     
     // MARK: - Private Properties
 
-    private var alertPresenter = AlertPresenter()
+    private var alertPresenter: AlertPresenter?
     private var presenter: MovieQuizPresenter!
     
     
@@ -25,7 +25,9 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         super.viewDidLoad()
         
         activityIndicator.hidesWhenStopped = true
+        
         presenter = MovieQuizPresenter(viewController: self)
+        alertPresenter = AlertPresenter()
     }
     
     // MARK: - IB Actions
@@ -49,18 +51,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     }
     
     func show(quiz result: QuizResultsView) {
-        let message = presenter.makeResultsMessage()
-        
-        let alertModel = AlertModel(
-            title: result.title,
-            message: message,
-            buttonText: result.buttonText) { [weak self] in
-            guard let self = self else { return }
-            
-            self.presenter.restartGame()
-        }
-        
-        alertPresenter.show(in: self, model: alertModel)
+        presenter.show(quiz: result)
     }
     
     func highlightImageBorder(isCorrect: Bool) {
@@ -82,18 +73,12 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         activityIndicator.stopAnimating()
     }
     
+    func showAlert(model: AlertModel) {
+        alertPresenter?.show(in: self, model: model)
+    }
+    
     func showNetworkError(message: String) {
         hideLoadingIndicator()
-        
-        let errorAlert = AlertModel(
-            title: "Ошибка",
-            message: message,
-            buttonText: "Попробовать ещё раз") { [weak self] in
-            guard let self = self else { return }
-            
-            self.presenter.restartGame()
-        }
-        
-        alertPresenter.show(in: self, model: errorAlert)
+        presenter.showNetworkError(message: message)
     }
 }

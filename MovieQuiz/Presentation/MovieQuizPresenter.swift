@@ -64,6 +64,34 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         
     }
     
+    func show(quiz result: QuizResultsView) {
+        let message = makeResultsMessage()
+        
+        let alertModel = AlertModel(
+            title: result.title,
+            message: message,
+            buttonText: result.buttonText) { [weak self] in
+            guard let self = self else { return }
+            
+            restartGame()
+        }
+        
+        viewController?.showAlert(model: alertModel)
+    }
+    
+    func showNetworkError(message: String) {
+        let errorAlert = AlertModel(
+            title: "Ошибка",
+            message: message,
+            buttonText: "Попробовать ещё раз") { [weak self] in
+            guard let self = self else { return }
+
+            restartGame()
+        }
+        
+        viewController?.showAlert(model: errorAlert)
+    }
+    
     func isLastQuestion() -> Bool {
         currentQuestionIndex == questionsAmount - 1
     }
